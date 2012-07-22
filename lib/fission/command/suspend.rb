@@ -1,6 +1,7 @@
 module Fission
   class Command
     class Suspend < Command
+      include Fission::CommandHelpers
 
       def initialize(args=[])
         super
@@ -10,49 +11,39 @@ module Fission
       def execute
         option_parser.parse! @args
 
-        if @args.count != 1 && !@options.all
-          Fission.ui.output self.class.help
-          Fission.ui.output ""
-          Fission.ui.output_and_exit "Incorrect arguments for suspend command", 1
-        end
+        incorrect_arguments 'suspend' if @args.count != 1 && !@options.all
 
         vms_to_suspend.each do |vm|
-          Fission.ui.output "Suspending '#{vm.name}'"
-          task = vm.suspend
+          output "Suspending '#{vm.name}'"
+          response = vm.suspend
 
-          if task.successful?
-            Fission.ui.output "VM '#{vm.name}' suspended"
+          if response.successful?
+            output "VM '#{vm.name}' suspended"
           else
-            Fission.ui.output_and_exit "There was an error suspending the VM.  The error was:\n#{task.output}", task.code
+            output_and_exit "There was an error suspending the VM.  The error was:\n#{response.message}", response.code
           end
         end
       end
 
       def vms_to_suspend
         if @options.all
-          vms=Fission::VM.all_running
+          response = VM.all_running
+
+          if response.successful?
+            vms = response.data
+          else
+            output_and_exit "There was an error getting the list of running VMs.  The error was:\n#{response.message}", response.code
+          end
         else
-          vm_name = @args.first
-          vm=Fission::VM.new(vm_name)
-
-          unless vm.exists?
-            Fission.ui.output ''
-            Fission.ui.output_and_exit "VM #{vm_name} does not exist (#{Fission::VM.path(vm_name)})", 1
-          end
-
-          unless vm.running?
-            Fission.ui.output ''
-            Fission.ui.output_and_exit "VM '#{vm_name}' is not running", 1
-          end
-
-          vms = [vm]
+          vms = [ VM.new(@args.first) ]
         end
+
         vms
       end
 
       def option_parser
         optparse = OptionParser.new do |opts|
-          opts.banner = "\nsuspend usage: fission suspend [vm | --all]"
+          opts.banner = "\nsuspend usage: fission suspend [vm_name | --all]"
 
           opts.on '--all', 'Suspend all running VMs' do
             @options.all = true

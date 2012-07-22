@@ -1,40 +1,31 @@
 module Fission
   class Command
     class SnapshotList < Command
-
-      def initialize(args=[])
-        super
-      end
+      include Fission::CommandHelpers
 
       def execute
-        unless @args.count == 1
-          Fission.ui.output self.class.help
-          Fission.ui.output ""
-          Fission.ui.output_and_exit "Incorrect arguments for snapshot list command", 1
-        end
+        incorrect_arguments 'snapshot list' unless @args.count == 1
 
-        vm_name = @args.first
+        vm = VM.new @args.first
 
-        vm = Fission::VM.new vm_name
+        response = vm.snapshots
 
-        unless vm.exists? 
-          Fission.ui.output_and_exit "Unable to find the VM #{vm_name} (#{vm.path})", 1 
-        end
+        if response.successful?
+          snaps = response.data
 
-        snaps=vm.snapshots
-        unless snaps.empty?
-            Fission.ui.output snaps.join("\n")
+          if snaps.any?
+            output snaps.join("\n")
+          else
+            output "No snapshots found for VM '#{vm.name}'"
+          end
         else
-          Fission.ui.output "No snapshots found for VM '#{vm_name}'"
+          output_and_exit "There was an error listing the snapshots.  The error was:\n#{response.message}", response.code
         end
-
-        # TODO
-        Fission.ui.output_and_exit "There was an error listing the snapshots.  The error was:\n#{task.output}", task.code
       end
 
       def option_parser
         optparse = OptionParser.new do |opts|
-          opts.banner = "\nsnapshot list: fission snapshot list my_vm"
+          opts.banner = "\nsnapshot list: fission snapshot list vm_name"
         end
 
         optparse

@@ -2,20 +2,18 @@ module Fission
   class Command
     class Status < Command
 
-      def initialize(args=[])
-        super
-      end
-
       def execute
-
-        all_vms=Fission::VM.all
-        vm_with_longest_name = all_vms.max { |a,b| a.name.length <=> b.name.length }
-        max_name_length=vm_with_longest_name.name.length
-        all_vms.each do |vm|
-          status = vm.state
-          Fission.ui.output_printf "%-#{max_name_length}s   %s\n", vm.name, "["+status+"]"
+        response = VM.all_with_status
+        unless response.successful?
+          output_and_exit "There was an error getting the status of the VMs.  The error was:\n#{response.message}", response.code
         end
 
+        vms_status = response.data
+        longest_vm_name = vms_status.keys.max { |a,b| a.length <=> b.length }
+
+        vms_status.each_pair do |vm_name, status|
+          output_printf "%-#{longest_vm_name.length}s   [%s]\n", vm_name, status
+        end
       end
 
       def option_parser
