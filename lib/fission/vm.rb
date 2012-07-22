@@ -769,7 +769,9 @@ module Fission
 
         unless File.binary?(file)
           text = (File.read file).gsub from, to
-          File.open(file, 'w'){ |f| f.print text }
+          # Force binary mode to prevent windows from putting CR-LF end line style
+          # http://www.ruby-forum.com/topic/60697#58748
+          File.open(file, 'wb'){ |f| f.print text }
         end
 
         clean_up_conf_file(file) if ext == '.vmx'
@@ -802,7 +804,9 @@ module Fission
       content << "tools.remindInstall = \"FALSE\"\n"
       content << "uuid.action = \"create\"\n"
 
-      File.open(conf_file_path, 'w') { |f| f.print content }
+      # Force binary mode to prevent windows from putting CR-LF end line style
+      # http://www.ruby-forum.com/topic/60697#58748
+      File.open(conf_file_path, 'wb') { |f| f.print content }
     end
 
     # Internal: Helper for getting the configured vmrun_cmd value.
