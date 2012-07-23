@@ -8,11 +8,13 @@ module Veewee
         #include ::Veewee::Provider::Vmfusion::ProviderCommand
 
         def check_requirements
-          unless File.exists?("/Library/Application Support/VMware Fusion/vmrun")
-            raise Veewee::Error,"The file /Library/Application Support/VMware Fusion/vmrun does not exists. Probably you don't have Vmware fusion installed"
+          require 'fission'
+          vmrun_path = ::Fission.config['vmrun_bin']
+          
+          unless File.exists?(vmrun_path)
+            raise Veewee::Error,"The file '#{vmrun_path}' does not exists. Probably you don't have Vmware fusion installed"
           end
         end
-
 
       end #End Class
     end # End Module

@@ -305,7 +305,9 @@ module Fission
       interface_pattern = /^ethernet\d+/
       mac_pattern = /(\w\w[:-]\w\w[:-]\w\w[:-]\w\w[:-]\w\w[:-]\w\w)/
 
-      File.open conf_file_response.data, 'r' do |f|
+      conf_file_path = conf_file_response.data.gsub '\ ', ' '
+
+      File.open conf_file_path, 'r' do |f|
         f.grep(mac_pattern).each do |line|
           int = line.scan(interface_pattern)[0]
           mac = line.scan(mac_pattern)[0].first

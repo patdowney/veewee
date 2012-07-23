@@ -37,19 +37,17 @@ module Veewee
           super(name,env)
         end
 
+        # don't think this is used anywhere?
         def determine_vmrun_cmd
-          return "#{fusion_path}/vmrun"
+          return File.join(fusion_path,"vmrun")
         end
 
         def vm_path
-          home=ENV['HOME']
-          dir="#{home}/Documents/Virtual Machines.localized/#{name}.vmwarevm"
-          return dir
+          return File.join(::Fission.config['vm_dir'], "#{name}.vmwarevm")
         end
 
         def fusion_path
-          dir="/Library/Application Support/VMware Fusion/"
-          return dir
+          return File.dirname(::Fission.config['vmrun_bin'])
         end
 
         def vmx_file_path
